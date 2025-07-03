@@ -6,26 +6,27 @@
     <style>
         @page {
             size: A4;
-            margin: 0.7in; /* Adjust margins for better spacing */
+            margin: 0.7in;
         }
         body {
             font-family: 'Trebuchet MS', sans-serif;
             font-size: 10pt;
             color: #333;
         }
-        .header-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
+        /* UPDATED: New header styles for better control */
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
         }
-        .header-table td {
-            vertical-align: top;
-            padding: 0;
+        .sub-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
         }
         .main-title {
-            font-size: 18pt;
+            font-size: 22pt;
             font-weight: bold;
-            text-align: center;
+            margin-bottom: 15px; /* Add space below the title */
         }
         .address-table {
             width: 100%;
@@ -48,15 +49,15 @@
         .item-table th, .item-table td {
             border: 1px solid #aaa;
             padding: 8px;
-            text-align: left;
+            text-align: center;
         }
         .item-table th {
-            background-color: #e9e9f3;
+            background-color: #ffffff;
             font-weight: bold;
         }
         .totals-section {
             margin-top: 10px;
-            float: right; /* Align to the right */
+            float: right;
             width: 30%;
         }
         .totals-table {
@@ -74,8 +75,9 @@
         .comments-section {
             border: 1px solid #aaa;
             padding: 10px;
-            margin-top: 80px; /* Add space to clear the floating totals */
+            margin-top: 80px;
             clear: both;
+            text-align: center;
         }
         .footer-contact {
             border-top: 1px solid #aaa;
@@ -86,15 +88,16 @@
 </head>
 <body>
 
-    <table class="header-table">
-        <tr>
-            <td style="width: 33%;"><h2>{{ box_name }}</h2></td>
-            <td style="width: 34%;"><div class="main-title">PACKING SLIP</div></td>
-            <td style="width: 33%; text-align: right;">
+    <div class="header">
+        <div class="main-title">PACKING SLIP</div>
+        <div class="sub-header">
+            <div style="text-align: left;"><h2>{{ box_name }}</h2></div>
+            <div style="text-align: right;">
                 <b>DATE</b><br>{{ current_date }}
-            </td>
-        </tr>
-    </table>
+            </div>
+        </div>
+    </div>
+
 
     <table class="address-table">
         <tr>
@@ -107,7 +110,7 @@
                 {{ from_address.country }}<br>
                 {{ from_address.postcode }}
             </td>
-            <td>
+            <td style="text-align: right;">
                 <div class="section-title">SHIP TO:</div>
                 {{ to_address.name }}<br>
                 {{ to_address.line1 }}<br>
@@ -135,7 +138,7 @@
                 <td style="text-align: center;">{{ item.quantity }}</td>
             </tr>
             {% endfor %}
-            {% for i in range(items|length, 18) %}
+            {% for i in range(items|length, 12) %}
             <tr>
                 <td>&nbsp;</td>
                 <td>&nbsp;</td>
@@ -165,7 +168,7 @@
         Not for Sale | Tidak untuk Dijual
         <div class="footer-contact">
             If you have any questions or concerns, please contact:<br>
-            [Your Email] WhatsApp: [Your WhatsApp Number]
+            tamorajolin@gmail.com WhatsApp: +62 811-600-519
         </div>
     </div>
 

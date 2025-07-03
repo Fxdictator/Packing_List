@@ -19,16 +19,16 @@ BOX_TYPES = {
 
 # NEW: Store addresses in dictionaries
 FROM_ADDRESS = {
-    "name": "John Doe",
+    "name": "Jolin Tamora",
     "line1": "Apartment 802, Satin House",
-    "line2": "7 Fresco Walk",
+    "line2": "15 Piazza Walk",
     "city": "London",
     "country": "United Kingdom",
     "postcode": "E1 8PW"
 }
 
 TO_ADDRESS = {
-    "name": "John Doe",
+    "name": "Jolin Tamora",
     "line1": "Jl. Pantai Batu Bolong,",
     "line2": "Gg. Bantan No.11C",
     "city_province": "Badung, Bali",
