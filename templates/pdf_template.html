@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Packing Slip</title>
+    <style>
+        @page { size: A4; margin: 0.5in; }
+        body { font-family: 'Trebuchet MS', sans-serif; font-size: 10pt; color: #333; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 6px; text-align: left; vertical-align: top; }
+        .no-border { border: none; }
+        .header-table td { border: none; vertical-align: middle; }
+        .main-title { font-size: 16pt; font-weight: bold; text-align: center; }
+        .section-title { font-weight: bold; }
+        .item-table th { background-color: #f2f2f2; font-weight: bold; }
+        .totals-table { width: auto; float: right; margin-top: 10px; }
+        .totals-table td { border: none; text-align: right; }
+        .totals-table td:first-child { font-weight: bold; }
+        .comments-section { border: 1px solid #ccc; padding: 10px; margin-top: 50px; }
+    </style>
+</head>
+<body>
+    <table class="header-table">
+        <tr>
+            <td>
+                <h2>{{ box_name }}</h2>
+            </td>
+            <td style="text-align: center; width: 50%;">
+                <div class="main-title">PACKING SLIP</div>
+            </td>
+            <td style="text-align: right;">
+                <b>DATE</b> {{ current_date }}
+            </td>
+        </tr>
+    </table>
+
+    <table style="width: 100%; margin-top: 20px;">
+        <tr>
+            <td class="no-border" style="width: 50%;">
+                <div class="section-title">SHIPPED FROM:</div>
+                <div>{{ from_address.name }}</div>
+                <div>{{ from_address.line1 }}</div>
+                <div>{{ from_address.line2 }}</div>
+                <div>{{ from_address.city }}</div>
+                <div>{{ from_address.country }}</div>
+                <div>{{ from_address.postcode }}</div>
+            </td>
+            <td class="no-border" style="width: 50%;">
+                <div class="section-title">SHIP TO:</div>
+                <div>{{ to_address.name }}</div>
+                <div>{{ to_address.line1 }}</div>
+                <div>{{ to_address.line2 }}</div>
+                <div>{{ to_address.city_province }}</div>
+                <div>{{ to_address.area }}</div>
+                <div>{{ to_address.postcode }}</div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="item-table" style="margin-top: 20px;">
+        <thead>
+            <tr>
+                <th style="width: 25%;">ITEM</th>
+                <th style="width: 60%;">DESCRIPTION</th>
+                <th style="width: 15%; text-align: center;">SHIPPED QTY</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.item }}</td>
+                <td>{{ item.description }}</td>
+                <td style="text-align: center;">{{ item.quantity }}</td>
+            </tr>
+            {% endfor %}
+            {% for i in range(items|length, 15) %}
+            <tr>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <table class="totals-table">
+        <tr>
+            <td>TOTAL:</td>
+            <td>{{ total_qty }}</td>
+        </tr>
+        <tr>
+            <td>Volumetric Weight:</td>
+            <td>{{ volumetric_weight_str }}</td>
+        </tr>
+    </table>
+
+    <div class="comments-section">
+        <div class="section-title">COMMENTS (KOMENTAR):</div>
+        <p>
+            All Items are Used | Semua barang adalah Bekas <br>
+            All items are personal belongings | Semua barang adalah barang pribadi <br>
+            Not for Sale | Tidak untuk Dijual
+        </p>
+        <hr>
+        <p>If you have any questions or concerns, please contact:<br>
+        [Your Email] WhatsApp: [Your WhatsApp Number]</p>
+    </div>
+
+</body>
+</html>
