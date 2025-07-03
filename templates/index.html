@@ -14,17 +14,14 @@
         .box-card:hover { box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
         .box-info { text-decoration: none; color: #333; display: flex; align-items: center; padding: 15px; flex-grow: 1; gap: 15px; }
         .box-name { font-weight: 600; font-size: 1.1em; }
-        /* NEW STYLES for box details */
-        .box-details { display: flex; gap: 10px; align-items: center; }
+        .box-details { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
         .detail-tag { background-color: #e9e9f3; color: #555; font-size: 0.8em; padding: 4px 8px; border-radius: 10px; }
         .box-actions { padding: 15px; display: flex; }
         .btn-delete { color: #d9534f; text-decoration: none; font-size: 0.9em; padding: 8px; border-radius: 5px; }
         .btn-delete:hover { background-color: #fceeee; }
         .form-container { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; }
-        /* UPDATED STYLES for the form */
-        .create-form { display: flex; gap: 10px; }
-        input[type="text"], select { padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
-        input[type="text"] { flex-grow: 1; }
+        .create-form { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr; gap: 10px; align-items: center;}
+        input, select { padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; width: 100%; box-sizing: border-box; }
         button { padding: 12px 20px; background-color: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; }
         button:hover { background-color: #004494; }
     </style>
@@ -40,7 +37,8 @@
                     <div class="box-details">
                         <span class="detail-tag">{{ box.type }}</span>
                         <span class="detail-tag">{{ box.count }} items</span>
-                        <span class="detail-tag">Vol: {{ box.weight }}</span>
+                        <span class="detail-tag">Vol: {{ box.volumetric_weight }}</span>
+                        <span class="detail-tag">Actual: {{ box.actual_weight }}</span>
                     </div>
                 </a>
                 <div class="box-actions">
@@ -64,6 +62,7 @@
                     <option value="{{ type }}">{{ type }}</option>
                     {% endfor %}
                 </select>
+                <input type="number" step="0.1" name="actual_weight" placeholder="Wt (kg)">
                 <button type="submit">Create Box</button>
             </form>
         </div>

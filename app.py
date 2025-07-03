@@ -4,7 +4,8 @@ import pandas as pd
 from flask import Flask, render_template, request, redirect, url_for, send_file, Response
 from datetime import datetime
 import io
-from weasyprint import HTML  # Import WeasyPrint
+from weasyprint import HTML
+import math # Import the math library for rounding
 
 app = Flask(__name__)
 
@@ -17,28 +18,19 @@ BOX_TYPES = {
     "Type 3 (Rectangle)": {"L": 52, "W": 30, "H": 30}
 }
 
-# NEW: Store addresses in dictionaries
 FROM_ADDRESS = {
-    "name": "Jolin Tamora",
-    "line1": "Apartment 802, Satin House",
-    "line2": "15 Piazza Walk",
-    "city": "London",
-    "country": "United Kingdom",
-    "postcode": "E1 8PW"
+    "name": "John Doe", "line1": "Apartment 802, Satin House", "line2": "7 Fresco Walk",
+    "city": "London", "country": "United Kingdom", "postcode": "E1 8PW"
 }
 
 TO_ADDRESS = {
-    "name": "Jolin Tamora",
-    "line1": "Jl. Pantai Batu Bolong,",
-    "line2": "Gg. Bantan No.11C",
-    "city_province": "Badung, Bali",
-    "area": "Kuta Utara",
-    "postcode": "80361"
+    "name": "John Doe", "line1": "Jl. Pantai Batu Bolong,", "line2": "Gg. Bantan No.11C",
+    "city_province": "Badung, Bali", "area": "Kuta Utara", "postcode": "80361"
 }
 
-
 def calculate_volumetric_weight(dims):
-    return (dims["L"] * dims["W"] * dims["H"]) / 5000
+    """Calculates volumetric weight and ALWAYS rounds up."""
+    return math.ceil((dims["L"] * dims["W"] * dims["H"]) / 5000)
 
 def load_data():
     if not os.path.exists(DATA_FILE): return {}
@@ -57,8 +49,15 @@ def index():
     if request.method == 'POST':
         box_name = request.form['box_name'].strip()
         box_type = request.form['box_type']
+        # Get actual weight from form, default to 0 if empty
+        actual_weight = request.form.get('actual_weight', 0)
+        
         if box_name and box_name not in data:
-            data[box_name] = {"type": box_type, "items": []}
+            data[box_name] = {
+                "type": box_type, 
+                "items": [],
+                "actual_weight": float(actual_weight) if actual_weight else 0
+            }
             save_data(data)
         return redirect(url_for('index'))
     
@@ -71,58 +70,55 @@ def index():
         if isinstance(box_info, dict):
             box_type = box_info.get("type", "N/A")
             item_count = len(box_info.get("items", []))
+            actual_weight = box_info.get("actual_weight", 0)
             volumetric_weight = 0
             if box_type in BOX_TYPES:
                 dims = BOX_TYPES[box_type]
                 volumetric_weight = calculate_volumetric_weight(dims)
-            weight_str = f"{volumetric_weight:.2f} kg"
+            weight_str = f"{volumetric_weight} kg" # Now an integer
         else:
-            box_type, item_count, weight_str = "N/A (Legacy)", len(box_info), "N/A"
+            box_type, item_count, weight_str, actual_weight = "N/A (Legacy)", len(box_info), "N/A", 0
 
-        boxes_with_details.append({'name': box_name, 'count': item_count, 'type': box_type, 'weight': weight_str})
+        boxes_with_details.append({
+            'name': box_name, 
+            'count': item_count, 
+            'type': box_type, 
+            'volumetric_weight': weight_str,
+            'actual_weight': f"{actual_weight} kg"
+        })
     
     return render_template('index.html', boxes=boxes_with_details, box_types=BOX_TYPES.keys())
 
-
+# ... (view_box, edit_item, delete_item, delete_box routes remain mostly the same) ...
 @app.route('/box/<box_name>', methods=['GET', 'POST'])
 def view_box(box_name):
     data = load_data()
     if box_name not in data: return redirect(url_for('index'))
-
     box_content = data[box_name]
     box_items_list = box_content.get('items', []) if isinstance(box_content, dict) else box_content
-
     if request.method == 'POST':
         if isinstance(box_content, dict):
             new_item = {'item': request.form['item'], 'description': request.form['description'], 'quantity': int(request.form['quantity'])}
             box_content['items'].append(new_item)
             save_data(data)
         return redirect(url_for('view_box', box_name=box_name))
-
     return render_template('box_view.html', box_name=box_name, items=box_items_list)
 
-# ... (edit_item, delete_item, delete_box routes remain the same) ...
 @app.route('/edit/<box_name>/<int:item_index>', methods=['GET', 'POST'])
 def edit_item(box_name, item_index):
     data = load_data()
-    
     box_content = data.get(box_name)
     if not box_content: return redirect(url_for('index'))
     items_list = box_content if isinstance(box_content, list) else box_content.get('items', [])
-    
     if not 0 <= item_index < len(items_list): return redirect(url_for('view_box', box_name=box_name))
-        
     item_to_edit = items_list[item_index]
-
     if request.method == 'POST':
         item_to_edit['item'] = request.form['item']
         item_to_edit['description'] = request.form['description']
         item_to_edit['quantity'] = int(request.form['quantity'])
         save_data(data)
         return redirect(url_for('view_box', box_name=box_name))
-
     return render_template('edit_item.html', box_name=box_name, item_index=item_index, item=item_to_edit)
-
 
 @app.route('/delete/<box_name>/<int:item_index>')
 def delete_item(box_name, item_index):
@@ -135,7 +131,6 @@ def delete_item(box_name, item_index):
         save_data(data)
     return redirect(url_for('view_box', box_name=box_name))
 
-
 @app.route('/delete_box/<box_name>')
 def delete_box(box_name):
     data = load_data()
@@ -144,46 +139,48 @@ def delete_box(box_name):
         save_data(data)
     return redirect(url_for('index'))
 
-
-# NEW: Route to export to PDF
-@app.route('/export_pdf/<box_name>')
-def export_pdf(box_name):
+def get_export_data(box_name):
+    """Helper function to gather data for PDF and Print views."""
     data = load_data()
     box_info = data.get(box_name)
-    if not box_info: return redirect(url_for('index'))
+    if not box_info:
+        return None
+
+    items, vol_wt, act_wt, total_qty = [], 0, 0, 0
     
-    items, volumetric_weight_str, total_qty = [], "N/A", 0
     if isinstance(box_info, dict):
         items = box_info.get('items', [])
         box_type = box_info.get("type", "N/A")
+        act_wt = box_info.get("actual_weight", 0)
         total_qty = sum(item['quantity'] for item in items)
         if box_type in BOX_TYPES:
-            weight = calculate_volumetric_weight(BOX_TYPES[box_type])
-            volumetric_weight_str = f"{weight:.2f} kg"
+            vol_wt = calculate_volumetric_weight(BOX_TYPES[box_type])
     else:
         items = box_info
         total_qty = sum(item['quantity'] for item in items)
 
-    # Render the HTML template with data
-    rendered_html = render_template(
-        'pdf_template.html',
-        box_name=box_name,
-        current_date=datetime.now().strftime('%d/%m/%Y'),
-        from_address=FROM_ADDRESS,
-        to_address=TO_ADDRESS,
-        items=items,
-        total_qty=total_qty,
-        volumetric_weight_str=volumetric_weight_str
-    )
+    return {
+        "items": items,
+        "total_qty": total_qty,
+        "volumetric_weight_str": f"{vol_wt} kg",
+        "actual_weight_str": f"{act_wt} kg"
+    }
 
-    # Generate PDF from HTML
+@app.route('/export_pdf/<box_name>')
+def export_pdf(box_name):
+    export_data = get_export_data(box_name)
+    if not export_data: return redirect(url_for('index'))
+    
+    rendered_html = render_template('pdf_template.html', box_name=box_name, current_date=datetime.now().strftime('%d/%m/%Y'), from_address=FROM_ADDRESS, to_address=TO_ADDRESS, **export_data)
     pdf = HTML(string=rendered_html).write_pdf()
+    return Response(pdf, mimetype='application/pdf', headers={'Content-Disposition': f'attachment;filename={box_name}_Packing_List.pdf'})
 
-    # Create a Flask response with the PDF
-    return Response(pdf,
-                    mimetype='application/pdf',
-                    headers={'Content-Disposition': f'attachment;filename={box_name}_Packing_List.pdf'})
-
+@app.route('/print/<box_name>')
+def print_packing_slip(box_name):
+    export_data = get_export_data(box_name)
+    if not export_data: return redirect(url_for('index'))
+    
+    return render_template('print_template.html', box_name=box_name, current_date=datetime.now().strftime('%d/%m/%Y'), from_address=FROM_ADDRESS, to_address=TO_ADDRESS, **export_data)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001, debug=True)
