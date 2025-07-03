@@ -9,6 +9,10 @@
         .container { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h1, h2 { color: #444; }
         h1 { text-align: center; margin-bottom: 25px; }
+        .totals-summary { background-color: #eef; padding: 15px 20px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #ccf; }
+        .totals-summary h2 { margin-top: 0; margin-bottom: 15px; color: #335; font-size: 1.3em; }
+        .totals-summary p { margin: 5px 0; font-size: 1em; color: #333; }
+        .totals-summary .summary-value { font-weight: 600; color: #0056b3; }
         .box-list { list-style: none; padding: 0; }
         .box-card { background: #fff; margin-bottom: 12px; border-radius: 6px; border: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; transition: box-shadow 0.2s; }
         .box-card:hover { box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
@@ -17,8 +21,10 @@
         .box-details { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
         .detail-tag { background-color: #e9e9f3; color: #555; font-size: 0.8em; padding: 4px 8px; border-radius: 10px; }
         .box-actions { padding: 15px; display: flex; }
-        .btn-delete { color: #d9534f; text-decoration: none; font-size: 0.9em; padding: 8px; border-radius: 5px; }
+        .btn-delete { color: #d9534f; text-decoration: none; font-size: 0.9em; padding: 8px; border-radius: 5px; margin-left: 5px; }
         .btn-delete:hover { background-color: #fceeee; }
+        .btn-edit-weight { text-decoration: none; color: #0056b3; margin-left: 5px; font-size: 0.8em; }
+        .btn-edit-weight:hover { color: #003d82; }
         .form-container { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; }
         .create-form { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr; gap: 10px; align-items: center;}
         input, select { padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; width: 100%; box-sizing: border-box; }
@@ -29,6 +35,14 @@
 <body>
     <div class="container">
         <h1>📦 My Packing Boxes</h1>
+
+        <div class="totals-summary">
+            <h2>Overall Summary</h2>
+            <p>Total Items: <span class="summary-value">{{ total_items }}</span></p>
+            <p>Total Volumetric Weight: <span class="summary-value">{{ total_volumetric_weight }}</span></p>
+            <p>Total Actual Weight: <span class="summary-value">{{ total_actual_weight }}</span></p>
+        </div>
+
         <div class="box-list">
             {% for box in boxes %}
             <div class="box-card">
@@ -38,12 +52,14 @@
                         <span class="detail-tag">{{ box.type }}</span>
                         <span class="detail-tag">{{ box.count }} items</span>
                         <span class="detail-tag">Vol: {{ box.volumetric_weight }}</span>
-                        <span class="detail-tag">Actual: {{ box.actual_weight }}</span>
+                        <span class="detail-tag">Actual: {{ box.actual_weight }}
+                            <a href="{{ url_for('edit_box_weight', box_name=box.name) }}" class="btn-edit-weight" title="Edit actual weight">&#9998;</a>
+                        </span>
                     </div>
                 </a>
                 <div class="box-actions">
                     <a href="{{ url_for('delete_box', box_name=box.name) }}" class="btn-delete" onclick="return confirm('Are you sure you want to delete this entire box?');">
-                        Delete
+                        Delete Box
                     </a>
                 </div>
             </div>

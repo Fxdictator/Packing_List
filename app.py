@@ -1,16 +1,16 @@
 import os
 import json
-import pandas as pd
 from flask import Flask, render_template, request, redirect, url_for, send_file, Response
 from datetime import datetime
 import io
 from weasyprint import HTML
-import math # Import the math library for rounding
+from math import ceil # Import the ceil function directly
 
 app = Flask(__name__)
 
 # --- Configuration & Helper Functions ---
 DATA_FILE = 'packing_data.json'
+CONFIG_FILE = 'config.json'
 
 BOX_TYPES = {
     "Type 1 (Square)": {"L": 52, "W": 52, "H": 40},
@@ -18,19 +18,38 @@ BOX_TYPES = {
     "Type 3 (Rectangle)": {"L": 52, "W": 30, "H": 30}
 }
 
-FROM_ADDRESS = {
-    "name": "Jolin Tamora", "line1": "Apartment 802, Satin House", "line2": "15 Piazza Walk",
-    "city": "London", "country": "United Kingdom", "postcode": "E1 8PW"
-}
+def load_config():
+    """Loads configuration from JSON file."""
+    try:
+        with open(CONFIG_FILE, 'r') as f:
+            config = json.load(f)
+    except FileNotFoundError:
+        # Fallback to default addresses if config file is missing
+        # This is just a safety net, ideally the app should ensure config.json exists
+        print(f"Warning: {CONFIG_FILE} not found. Using default addresses.")
+        config = {
+            "FROM_ADDRESS": {
+                "name": "Default From Name", "line1": "Default From Line 1", "line2": "",
+                "city": "Default City", "country": "Default Country", "postcode": "00000"
+            },
+            "TO_ADDRESS": {
+                "name": "Default To Name", "line1": "Default To Line 1", "line2": "",
+                "city_province": "Default Province", "area": "Default Area", "postcode": "00000"
+            }
+        }
+    except json.JSONDecodeError:
+        print(f"Error: Could not decode {CONFIG_FILE}. Using default addresses.")
+        # Similar fallback for corrupted JSON
+        config = {
+            "FROM_ADDRESS": {"name": "Error From"}, "TO_ADDRESS": {"name": "Error To"} # Simplified error defaults
+        }
+    return config.get("FROM_ADDRESS", {}), config.get("TO_ADDRESS", {})
 
-TO_ADDRESS = {
-    "name": "Jolin Tamora", "line1": "Jl. Pantai I Batu Bolong,", "line2": "Villa Puri Bawana No.11C",
-    "city_province": "Badung, Bali", "area": "Kuta Utara", "postcode": "80361"
-}
+FROM_ADDRESS, TO_ADDRESS = load_config()
 
 def calculate_volumetric_weight(dims):
     """Calculates volumetric weight and ALWAYS rounds up."""
-    return math.ceil((dims["L"] * dims["W"] * dims["H"]) / 5000)
+    return ceil((dims["L"] * dims["W"] * dims["H"]) / 5000)
 
 def load_data():
     if not os.path.exists(DATA_FILE): return {}
@@ -64,30 +83,73 @@ def index():
     sorted_box_names = sorted(data.keys(), key=lambda x: int(''.join(filter(str.isdigit, x))) if any(char.isdigit() for char in x) else float('inf'))
     
     boxes_with_details = []
+    total_items_all_boxes = 0
+    total_volumetric_weight_all_boxes = 0
+    total_actual_weight_all_boxes = 0
+
     for box_name in sorted_box_names:
         box_info = data[box_name]
+        item_count = 0
+        actual_weight_val = 0
+        volumetric_weight_val = 0
         
         if isinstance(box_info, dict):
             box_type = box_info.get("type", "N/A")
-            item_count = len(box_info.get("items", []))
-            actual_weight = box_info.get("actual_weight", 0)
-            volumetric_weight = 0
+            items_list = box_info.get("items", [])
+            item_count = sum(item.get('quantity', 0) for item in items_list) # Sum of quantities
+            actual_weight_val = box_info.get("actual_weight", 0)
             if box_type in BOX_TYPES:
                 dims = BOX_TYPES[box_type]
-                volumetric_weight = calculate_volumetric_weight(dims)
-            weight_str = f"{volumetric_weight} kg" # Now an integer
-        else:
-            box_type, item_count, weight_str, actual_weight = "N/A (Legacy)", len(box_info), "N/A", 0
+                volumetric_weight_val = calculate_volumetric_weight(dims)
+            volumetric_weight_str = f"{volumetric_weight_val} kg"
+        else: # Legacy format
+            box_type = "N/A (Legacy)"
+            # Assuming legacy items might not have quantity, count them as 1 each or adjust if structure is known
+            item_count = len(box_info) if isinstance(box_info, list) else 0
+            volumetric_weight_str = "N/A"
+            # actual_weight_val remains 0 for legacy as it wasn't stored then
 
         boxes_with_details.append({
             'name': box_name, 
-            'count': item_count, 
+            'count': item_count, # This is now total quantity of items in the box
             'type': box_type, 
-            'volumetric_weight': weight_str,
-            'actual_weight': f"{actual_weight} kg"
+            'volumetric_weight': volumetric_weight_str,
+            'actual_weight': f"{actual_weight_val} kg"
         })
+
+        total_items_all_boxes += item_count
+        total_volumetric_weight_all_boxes += volumetric_weight_val
+        total_actual_weight_all_boxes += actual_weight_val
     
-    return render_template('index.html', boxes=boxes_with_details, box_types=BOX_TYPES.keys())
+    return render_template('index.html',
+                           boxes=boxes_with_details,
+                           box_types=BOX_TYPES.keys(),
+                           total_items=total_items_all_boxes,
+                           total_volumetric_weight=f"{total_volumetric_weight_all_boxes} kg",
+                           total_actual_weight=f"{total_actual_weight_all_boxes:.1f} kg") # Format actual weight
+
+@app.route('/edit_box_weight/<box_name>', methods=['GET', 'POST'])
+def edit_box_weight(box_name):
+    data = load_data()
+    if box_name not in data or not isinstance(data[box_name], dict):
+        return redirect(url_for('index')) # Or show an error
+
+    box_info = data[box_name]
+
+    if request.method == 'POST':
+        new_actual_weight = request.form.get('actual_weight')
+        if new_actual_weight is not None:
+            try:
+                box_info['actual_weight'] = float(new_actual_weight)
+                save_data(data)
+                return redirect(url_for('index'))
+            except ValueError:
+                # Handle error if conversion to float fails, e.g., flash a message
+                pass
+        return redirect(url_for('edit_box_weight', box_name=box_name)) # Redirect back if no weight or error
+
+    current_weight = box_info.get('actual_weight', 0)
+    return render_template('edit_box_weight.html', box_name=box_name, current_weight_kg=current_weight)
 
 # ... (view_box, edit_item, delete_item, delete_box routes remain mostly the same) ...
 @app.route('/box/<box_name>', methods=['GET', 'POST'])
