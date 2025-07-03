@@ -2,67 +2,129 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Packing Slip</title>
+    <title>Packing Slip - {{ box_name }}</title>
     <style>
-        @page { size: A4; margin: 0.5in; }
-        body { font-family: 'Trebuchet MS', sans-serif; font-size: 10pt; color: #333; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ccc; padding: 6px; text-align: left; vertical-align: top; }
-        .no-border { border: none; }
-        .header-table td { border: none; vertical-align: middle; }
-        .main-title { font-size: 16pt; font-weight: bold; text-align: center; }
-        .section-title { font-weight: bold; }
-        .item-table th { background-color: #f2f2f2; font-weight: bold; }
-        .totals-table { width: auto; float: right; margin-top: 10px; }
-        .totals-table td { border: none; text-align: right; }
-        .totals-table td:first-child { font-weight: bold; }
-        .comments-section { border: 1px solid #ccc; padding: 10px; margin-top: 50px; }
+        @page {
+            size: A4;
+            margin: 0.7in; /* Adjust margins for better spacing */
+        }
+        body {
+            font-family: 'Trebuchet MS', sans-serif;
+            font-size: 10pt;
+            color: #333;
+        }
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .header-table td {
+            vertical-align: top;
+            padding: 0;
+        }
+        .main-title {
+            font-size: 18pt;
+            font-weight: bold;
+            text-align: center;
+        }
+        .address-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .address-table td {
+            width: 50%;
+            vertical-align: top;
+        }
+        .section-title {
+            font-weight: bold;
+            font-size: 11pt;
+            margin-bottom: 5px;
+        }
+        .item-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .item-table th, .item-table td {
+            border: 1px solid #aaa;
+            padding: 8px;
+            text-align: left;
+        }
+        .item-table th {
+            background-color: #e9e9f3;
+            font-weight: bold;
+        }
+        .totals-section {
+            margin-top: 10px;
+            float: right; /* Align to the right */
+            width: 30%;
+        }
+        .totals-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .totals-table td {
+            text-align: right;
+            padding: 4px;
+        }
+        .totals-table td:first-child {
+            font-weight: bold;
+            text-align: left;
+        }
+        .comments-section {
+            border: 1px solid #aaa;
+            padding: 10px;
+            margin-top: 80px; /* Add space to clear the floating totals */
+            clear: both;
+        }
+        .footer-contact {
+            border-top: 1px solid #aaa;
+            margin-top: 10px;
+            padding-top: 10px;
+        }
     </style>
 </head>
 <body>
+
     <table class="header-table">
         <tr>
-            <td>
-                <h2>{{ box_name }}</h2>
-            </td>
-            <td style="text-align: center; width: 50%;">
-                <div class="main-title">PACKING SLIP</div>
-            </td>
-            <td style="text-align: right;">
-                <b>DATE</b> {{ current_date }}
+            <td style="width: 33%;"><h2>{{ box_name }}</h2></td>
+            <td style="width: 34%;"><div class="main-title">PACKING SLIP</div></td>
+            <td style="width: 33%; text-align: right;">
+                <b>DATE</b><br>{{ current_date }}
             </td>
         </tr>
     </table>
 
-    <table style="width: 100%; margin-top: 20px;">
+    <table class="address-table">
         <tr>
-            <td class="no-border" style="width: 50%;">
+            <td>
                 <div class="section-title">SHIPPED FROM:</div>
-                <div>{{ from_address.name }}</div>
-                <div>{{ from_address.line1 }}</div>
-                <div>{{ from_address.line2 }}</div>
-                <div>{{ from_address.city }}</div>
-                <div>{{ from_address.country }}</div>
-                <div>{{ from_address.postcode }}</div>
+                {{ from_address.name }}<br>
+                {{ from_address.line1 }}<br>
+                {{ from_address.line2 }}<br>
+                {{ from_address.city }}<br>
+                {{ from_address.country }}<br>
+                {{ from_address.postcode }}
             </td>
-            <td class="no-border" style="width: 50%;">
+            <td>
                 <div class="section-title">SHIP TO:</div>
-                <div>{{ to_address.name }}</div>
-                <div>{{ to_address.line1 }}</div>
-                <div>{{ to_address.line2 }}</div>
-                <div>{{ to_address.city_province }}</div>
-                <div>{{ to_address.area }}</div>
-                <div>{{ to_address.postcode }}</div>
+                {{ to_address.name }}<br>
+                {{ to_address.line1 }}<br>
+                {{ to_address.line2 }}<br>
+                {{ to_address.city_province }}<br>
+                {{ to_address.area }}<br>
+                {{ to_address.postcode }}
             </td>
         </tr>
     </table>
 
-    <table class="item-table" style="margin-top: 20px;">
+    <table class="item-table">
         <thead>
             <tr>
                 <th style="width: 25%;">ITEM</th>
                 <th style="width: 60%;">DESCRIPTION</th>
-                <th style="width: 15%; text-align: center;">SHIPPED QTY</th>
+                <th style="width: 15%; text-align: center;">QTY</th>
             </tr>
         </thead>
         <tbody>
@@ -73,7 +135,7 @@
                 <td style="text-align: center;">{{ item.quantity }}</td>
             </tr>
             {% endfor %}
-            {% for i in range(items|length, 15) %}
+            {% for i in range(items|length, 18) %}
             <tr>
                 <td>&nbsp;</td>
                 <td>&nbsp;</td>
@@ -83,27 +145,28 @@
         </tbody>
     </table>
 
-    <table class="totals-table">
-        <tr>
-            <td>TOTAL:</td>
-            <td>{{ total_qty }}</td>
-        </tr>
-        <tr>
-            <td>Volumetric Weight:</td>
-            <td>{{ volumetric_weight_str }}</td>
-        </tr>
-    </table>
+    <div class="totals-section">
+        <table class="totals-table">
+            <tr>
+                <td>TOTAL:</td>
+                <td>{{ total_qty }}</td>
+            </tr>
+            <tr>
+                <td>Volumetric Wt:</td>
+                <td>{{ volumetric_weight_str }}</td>
+            </tr>
+        </table>
+    </div>
 
     <div class="comments-section">
         <div class="section-title">COMMENTS (KOMENTAR):</div>
-        <p>
-            All Items are Used | Semua barang adalah Bekas <br>
-            All items are personal belongings | Semua barang adalah barang pribadi <br>
-            Not for Sale | Tidak untuk Dijual
-        </p>
-        <hr>
-        <p>If you have any questions or concerns, please contact:<br>
-        [Your Email] WhatsApp: [Your WhatsApp Number]</p>
+        All Items are Used | Semua barang adalah Bekas <br>
+        All items are personal belongings | Semua barang adalah barang pribadi <br>
+        Not for Sale | Tidak untuk Dijual
+        <div class="footer-contact">
+            If you have any questions or concerns, please contact:<br>
+            [Your Email] WhatsApp: [Your WhatsApp Number]
+        </div>
     </div>
 
 </body>
