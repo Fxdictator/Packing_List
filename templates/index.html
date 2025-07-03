@@ -12,14 +12,19 @@
         .box-list { list-style: none; padding: 0; }
         .box-card { background: #fff; margin-bottom: 12px; border-radius: 6px; border: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; transition: box-shadow 0.2s; }
         .box-card:hover { box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
-        .box-info { text-decoration: none; color: #333; display: flex; align-items: center; padding: 15px; flex-grow: 1; }
+        .box-info { text-decoration: none; color: #333; display: flex; align-items: center; padding: 15px; flex-grow: 1; gap: 15px; }
         .box-name { font-weight: 600; font-size: 1.1em; }
-        .item-count { background-color: #e9e9f3; color: #555; font-size: 0.8em; padding: 4px 8px; border-radius: 10px; margin-left: 15px; }
+        /* NEW STYLES for box details */
+        .box-details { display: flex; gap: 10px; align-items: center; }
+        .detail-tag { background-color: #e9e9f3; color: #555; font-size: 0.8em; padding: 4px 8px; border-radius: 10px; }
         .box-actions { padding: 15px; display: flex; }
         .btn-delete { color: #d9534f; text-decoration: none; font-size: 0.9em; padding: 8px; border-radius: 5px; }
         .btn-delete:hover { background-color: #fceeee; }
         .form-container { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; }
-        input[type="text"] { width: calc(100% - 130px); padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
+        /* UPDATED STYLES for the form */
+        .create-form { display: flex; gap: 10px; }
+        input[type="text"], select { padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
+        input[type="text"] { flex-grow: 1; }
         button { padding: 12px 20px; background-color: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; }
         button:hover { background-color: #004494; }
     </style>
@@ -32,7 +37,11 @@
             <div class="box-card">
                 <a href="{{ url_for('view_box', box_name=box.name) }}" class="box-info">
                     <span class="box-name">{{ box.name }}</span>
-                    <span class="item-count">{{ box.count }} items</span>
+                    <div class="box-details">
+                        <span class="detail-tag">{{ box.type }}</span>
+                        <span class="detail-tag">{{ box.count }} items</span>
+                        <span class="detail-tag">Vol: {{ box.weight }}</span>
+                    </div>
                 </a>
                 <div class="box-actions">
                     <a href="{{ url_for('delete_box', box_name=box.name) }}" class="btn-delete" onclick="return confirm('Are you sure you want to delete this entire box?');">
@@ -47,9 +56,15 @@
 
         <div class="form-container">
             <h2>Create New Box</h2>
-            <form action="{{ url_for('index') }}" method="post" style="display: flex;">
-                <input type="text" name="box_name" placeholder="e.g., BOX 2" required>
-                <button type="submit" style="margin-left: 10px;">Create Box</button>
+            <form action="{{ url_for('index') }}" method="post" class="create-form">
+                <input type="text" name="box_name" placeholder="e.g., BOX 1" required>
+                <select name="box_type" required>
+                    <option value="" disabled selected>Select a box type...</option>
+                    {% for type in box_types %}
+                    <option value="{{ type }}">{{ type }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit">Create Box</button>
             </form>
         </div>
     </div>
