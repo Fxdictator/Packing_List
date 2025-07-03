@@ -19,12 +19,12 @@ BOX_TYPES = {
 }
 
 FROM_ADDRESS = {
-    "name": "John Doe", "line1": "Apartment 802, Satin House", "line2": "7 Fresco Walk",
+    "name": "Jolin Tamora", "line1": "Apartment 802, Satin House", "line2": "15 Piazza Walk",
     "city": "London", "country": "United Kingdom", "postcode": "E1 8PW"
 }
 
 TO_ADDRESS = {
-    "name": "John Doe", "line1": "Jl. Pantai Batu Bolong,", "line2": "Gg. Bantan No.11C",
+    "name": "Jolin Tamora", "line1": "Jl. Pantai I Batu Bolong,", "line2": "Villa Puri Bawana No.11C",
     "city_province": "Badung, Bali", "area": "Kuta Utara", "postcode": "80361"
 }
 
