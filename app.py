@@ -86,12 +86,14 @@ def index():
     total_items_all_boxes = 0
     total_volumetric_weight_all_boxes = 0
     total_actual_weight_all_boxes = 0
+    total_chargeable_weight_all_boxes = 0
 
     for box_name in sorted_box_names:
         box_info = data[box_name]
         item_count = 0
         actual_weight_val = 0
         volumetric_weight_val = 0
+        chargeable_weight_val = 0
         
         if isinstance(box_info, dict):
             box_type = box_info.get("type", "N/A")
@@ -102,31 +104,36 @@ def index():
                 dims = BOX_TYPES[box_type]
                 volumetric_weight_val = calculate_volumetric_weight(dims)
             volumetric_weight_str = f"{volumetric_weight_val} kg"
+            chargeable_weight_val = max(actual_weight_val, float(volumetric_weight_val))
         else: # Legacy format
             box_type = "N/A (Legacy)"
-            # Assuming legacy items might not have quantity, count them as 1 each or adjust if structure is known
             item_count = len(box_info) if isinstance(box_info, list) else 0
             volumetric_weight_str = "N/A"
-            # actual_weight_val remains 0 for legacy as it wasn't stored then
+            # actual_weight_val remains 0, so chargeable will be volumetric (which is 0 here or N/A)
+            # For legacy, chargeable weight might be considered actual_weight_val if that's ever non-zero
+            chargeable_weight_val = actual_weight_val # Defaulting to actual for legacy if vol is N/A
 
         boxes_with_details.append({
             'name': box_name, 
-            'count': item_count, # This is now total quantity of items in the box
+            'count': item_count,
             'type': box_type, 
             'volumetric_weight': volumetric_weight_str,
-            'actual_weight': f"{actual_weight_val} kg"
+            'actual_weight': f"{actual_weight_val:.1f} kg", # Ensure actual weight is also formatted
+            'chargeable_weight': f"{chargeable_weight_val:.1f} kg"
         })
 
         total_items_all_boxes += item_count
         total_volumetric_weight_all_boxes += volumetric_weight_val
         total_actual_weight_all_boxes += actual_weight_val
-    
+        total_chargeable_weight_all_boxes += chargeable_weight_val
+
     return render_template('index.html',
                            boxes=boxes_with_details,
                            box_types=BOX_TYPES.keys(),
                            total_items=total_items_all_boxes,
                            total_volumetric_weight=f"{total_volumetric_weight_all_boxes} kg",
-                           total_actual_weight=f"{total_actual_weight_all_boxes:.1f} kg") # Format actual weight
+                           total_actual_weight=f"{total_actual_weight_all_boxes:.1f} kg",
+                           total_chargeable_weight=f"{total_chargeable_weight_all_boxes:.1f} kg")
 
 @app.route('/edit_box_weight/<box_name>', methods=['GET', 'POST'])
 def edit_box_weight(box_name):
@@ -221,11 +228,14 @@ def get_export_data(box_name):
         items = box_info
         total_qty = sum(item['quantity'] for item in items)
 
+    chargeable_weight_val = max(act_wt, float(vol_wt))
+
     return {
         "items": items,
         "total_qty": total_qty,
         "volumetric_weight_str": f"{vol_wt} kg",
-        "actual_weight_str": f"{act_wt} kg"
+        "actual_weight_str": f"{act_wt:.1f} kg", # Format actual weight
+        "chargeable_weight_str": f"{chargeable_weight_val:.1f} kg"
     }
 
 @app.route('/export_pdf/<box_name>')
