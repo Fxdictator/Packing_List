@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# macOS
+.DS_Store
+
+# VSCode
+.vscode/
+
+# Environment
+.env
+.venv/
+venv/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Sensitive/Config
+config.json
+
+# Data
+packing_data.json
+
+# Logs
+*.log
+
+# System
+Thumbs.db

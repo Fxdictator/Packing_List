@@ -255,4 +255,4 @@ def print_packing_slip(box_name):
     return render_template('print_template.html', box_name=box_name, current_date=datetime.now().strftime('%d/%m/%Y'), from_address=FROM_ADDRESS, to_address=TO_ADDRESS, **export_data)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host='192.168.1.160', port=5001, debug=True)
